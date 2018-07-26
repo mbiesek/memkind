@@ -1,30 +1,149 @@
 dist: trusty
-sudo: false
-language: cpp python
-before_install:
-  - pip install -U pytest
-install:
-script:
-  - CXX="g++-4.8" CC="gcc-4.8" LDFLAGS="-lrt -Wl,--no-as-needed" MAKEOPTS="-l 1.5" ./build.sh
-  - travis_wait 60 make check
-  - cat test-suite.log
-after_failure:
-  - echo "Sad memking"
-  - find . -name config.log -exec cat {} ";"
-  - find . -name test-suite.log -exec cat {} ";"
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - gcc-4.8
-    - g++-4.8
+sudo: required
+language: cpp
+matrix:
+  include:
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-4.9
+            - g++-4.9
+            - libnuma-dev
+            - numactl
+      env:
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - g++-5
+            - libnuma-dev
+            - numactl
+      env:
+         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-6
+            - g++-6
+            - libnuma-dev
+            - numactl
+      env:
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-7
+            - g++-7
     - libnuma-dev
     - numactl
-notifications:
-  email:
-    recipients:
-      - krzysztof.kulakowski@intel.com
-      - lukasz.anaczkowski@intel.com
-    on_success: [change]
-    on_failure: [always]
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
+          packages:
+            - clang-3.6
+            - libnuma-dev
+            - numactl
+      env:
+        - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
+
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+          packages:
+            - clang-3.7
+            - libnuma-dev
+            - numactl
+      env:
+        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
+
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - clang-3.8
+            - libnuma-dev
+            - numactl
+      env:
+        - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
+
+    # works on Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-3.9
+          packages:
+            - clang-3.9
+            - libnuma-dev
+            - numactl
+      env:
+        - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+
+    # works on Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+            - libnuma-dev
+            - numactl
+      env:
+        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+
+    # works on Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+            - libnuma-dev
+            - numactl
+      env:
+        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"		
+
+before_install:
+  - eval "${MATRIX_EVAL}"
+install:
+script:
+  - LDFLAGS="-lrt -Wl,--no-as-needed" MAKEOPTS="-l 1.5" ./build.sh
+after_failure:
+  - echo "Sad memking"
