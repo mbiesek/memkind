@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 - 2017 Intel Corporation.
+ * Copyright (C) 2015 - 2018 Intel Corporation.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@ MEMKIND_EXPORT struct memkind_ops MEMKIND_PMEM_OPS = {
     .get_mmap_flags = memkind_pmem_get_mmap_flags,
     .get_arena = memkind_thread_get_arena,
     .finalize = memkind_arena_finalize,
+    .malloc_usable_size = memkind_default_malloc_usable_size
 };
 
 void *pmem_extent_alloc(extent_hooks_t *extent_hooks,

@@ -511,6 +511,16 @@ MEMKIND_EXPORT int memkind_check_available(struct memkind *kind)
     return err;
 }
 
+MEMKIND_EXPORT size_t memkind_malloc_usable_size(struct memkind *kind, void *ptr)
+{
+    size_t size = 0;
+
+    if (MEMKIND_LIKELY(kind->ops->malloc_usable_size)) {
+        size = kind->ops->malloc_usable_size(kind, ptr);
+    }
+    return size;
+}
+
 MEMKIND_EXPORT void *memkind_malloc(struct memkind *kind, size_t size)
 {
     void *result;
