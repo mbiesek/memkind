@@ -57,6 +57,7 @@ void *pmem_extent_alloc(extent_hooks_t *extent_hooks,
     bool *commit,
     unsigned arena_ind)
 {
+    log_fatal("\npmem_extent_alloc");
     int err;
     void *addr = NULL;
 

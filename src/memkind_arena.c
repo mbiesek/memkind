@@ -346,6 +346,8 @@ MEMKIND_EXPORT int memkind_arena_create_map(struct memkind *kind, extent_hooks_t
         //create new arena with consecutive index
         unsigned arena_index;
         err = jemk_mallctl("arenas.create", (void*)&arena_index, &unsigned_size, NULL, 0);
+        log_fatal("\narenas create %u",arena_index);
+
         if(err) {
             goto exit;
         }
@@ -356,6 +358,7 @@ MEMKIND_EXPORT int memkind_arena_create_map(struct memkind *kind, extent_hooks_t
         //setup extent_hooks for newly created arena
         char cmd[64];
         snprintf(cmd, sizeof(cmd), "arena.%u.extent_hooks", arena_index);
+
         err = jemk_mallctl(cmd, NULL, NULL, (void*)&hooks, sizeof(extent_hooks_t*));
         if(err) {
             goto exit;
@@ -387,6 +390,8 @@ MEMKIND_EXPORT int memkind_arena_destroy(struct memkind *kind)
     if (kind->arena_map_len) {
         for (i = 0; i < kind->arena_map_len; ++i) {
             snprintf(cmd, 128, "arena.%u.destroy", kind->arena_zero + i);
+            log_fatal("\narenas destroy %u",kind->arena_zero + i);
+
             jemk_mallctl(cmd, NULL, NULL, NULL, 0);
         }
 #ifdef MEMKIND_TLS
