@@ -48,76 +48,39 @@
 
 #define CHUNK_SIZE	(4 * 1024 * 1024) /* assume 4MB chunks */
 
-static int pmem_tmpfile(const char *dir, size_t size, int *fd, void **addr)
-{
-    static char template[] = "/pmem.XXXXXX";
-    int err = 0;
-    int oerrno;
-
-    char fullname[strlen(dir) + sizeof (template)];
-    (void) strcpy(fullname, dir);
-    (void) strcat(fullname, template);
-
-    if ((*fd = mkstemp(fullname)) < 0) {
-        perror("mkstemp()");
-        err = MEMKIND_ERROR_RUNTIME;
-        goto exit;
-    }
-
-    (void) unlink(fullname);
-
-    if (ftruncate(*fd, size) != 0) {
-        err = MEMKIND_ERROR_RUNTIME;
-        goto exit;
-    }
-
-    *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, *fd, 0);
-    if (*addr == MAP_FAILED) {
-        err = MEMKIND_ERROR_RUNTIME;
-        goto exit;
-    }
-
-    return err;
-
-exit:
-    oerrno = errno;
-    if (*fd != -1) {
-        (void) close(*fd);
-    }
-    *fd = -1;
-    *addr = NULL;
-    errno = oerrno;
-    return err;
-}
 
 int
 main(int argc, char *argv[])
 {
     struct memkind *pmem_kind1;
     int err = 0;
-    int fd;
-    void *addr;
-
+    
     /* create PMEM partition */
-    err = memkind_create_pmem(".", PMEM1_MAX_SIZE, &pmem_kind1);
+    err = memkind_create_pmem("/mnt/pmem/", PMEM1_MAX_SIZE, &pmem_kind1);
     if (err) {
         perror("memkind_create_pmem()");
         fprintf(stderr, "Unable to create pmem partition\n");
         return errno ? -errno : 1;
     }
-
-    /* alternate way to create PMEM partition */
-    err = pmem_tmpfile(".", PMEM2_MAX_SIZE, &fd, &addr);
-    if (err) {
-        fprintf(stderr, "Unable to create temporary file\n");
-        return errno ? -errno : 1;
-    }
+    
+    memkind_destroy_kind(pmem_kind1);
 
     const size_t size = 512;
     char *pmem_str10 = NULL;
     char *pmem_str11 = NULL;
     char *pmem_str12 = NULL;
     char *pmem_str = NULL;
+    
+//    memkind_destroy_kind(pmem_kind1);
+    
+    err = memkind_create_pmem("/mnt/pmem/", PMEM1_MAX_SIZE, &pmem_kind1);
+    if (err) {
+        perror("memkind_create_pmem()");
+        fprintf(stderr, "Unable to create pmem partition\n");
+        return errno ? -errno : 1;
+    }
+    
+ //   memkind_destroy_kind(pmem_kind1);
 
     pmem_str10 = (char *)memkind_malloc(pmem_kind1, size);
     if (pmem_str10 == NULL) {

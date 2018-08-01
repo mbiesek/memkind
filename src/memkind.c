@@ -311,16 +311,19 @@ MEMKIND_EXPORT int memkind_destroy_kind(memkind_t kind)
     if (pthread_mutex_lock(&memkind_registry_g.lock) != 0)
         assert(0 && "failed to acquire mutex");
     unsigned int i;
+    
+    int err = kind->ops->destroy(kind);
+
     for (i = 0; i < MEMKIND_MAX_KIND; ++i) {
         if ((memkind_registry_g.partition_map[i]) &&
             (strcmp(kind->name, memkind_registry_g.partition_map[i]->name) == 0)) {
-            memkind_registry_g.partition_map[i] = NULL;
-            --memkind_registry_g.num_kind;
+                memkind_registry_g.partition_map[i] = NULL;
+                --memkind_registry_g.num_kind;
             break;
         }
     }
-
-    int err = kind->ops->destroy(kind);
+    
+    jemk_free(kind);
 
     if (pthread_mutex_unlock(&memkind_registry_g.lock) != 0)
         assert(0 && "failed to release mutex");
