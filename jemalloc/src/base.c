@@ -81,6 +81,11 @@ base_unmap(extent_hooks_t *extent_hooks, unsigned ind, void *addr,
 		    ind)) {
 			return;
 		}
+		if (extent_hooks->destroy != NULL)
+		{
+		    extent_hooks->destroy(extent_hooks, addr, size, 0,
+		    ind);
+		}
 		/* Nothing worked.  That's the application's problem. */
 	}
 }

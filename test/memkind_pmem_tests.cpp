@@ -32,7 +32,7 @@
 
 static const size_t PMEM_PART_SIZE = MEMKIND_PMEM_MIN_SIZE + 4096;
 static const size_t PMEM_NO_LIMIT = 0;
-static const char*  PMEM_DIR = "/tmp/";
+static const char*  PMEM_DIR = "/mnt/pmem/";
 
 class MemkindPmemTests: public :: testing::Test
 {
@@ -48,7 +48,10 @@ protected:
     }
 
     void TearDown()
-    {}
+    {
+         int err = memkind_destroy_kind(pmem_kind); 
+         ASSERT_EQ(0, err);
+    }
 };
 
 static void pmem_get_size(struct memkind *kind, size_t& total, size_t& free)
@@ -202,6 +205,8 @@ TEST_F(MemkindPmemTests, test_TC_MEMKIND_PmemMallocUsableSize)
         EXPECT_LE(diff, check_sizes[i].spacing);
         memkind_free(pmem_temp, alloc);
     }
+    err = memkind_destroy_kind(pmem_temp);
+    EXPECT_EQ(0, err);
 }
 
 TEST_F(MemkindPmemTests, test_TC_MEMKIND_PmemResize)
@@ -235,8 +240,33 @@ TEST_F(MemkindPmemTests, test_TC_MEMKIND_PmemResize)
 
     memkind_free(pmem_kind_no_limit, pmem_str10);
     memkind_free(pmem_kind_no_limit, pmem_strX);
+    err = memkind_destroy_kind(pmem_kind_no_limit);
+    EXPECT_EQ(0, err);
 
     err = memkind_create_pmem(PMEM_DIR, MEMKIND_PMEM_MIN_SIZE-1, &pmem_kind_not_possible);
     EXPECT_EQ(MEMKIND_ERROR_INVALID, err);
     EXPECT_TRUE(nullptr == pmem_kind_not_possible);
+}
+
+TEST_F(MemkindPmemTests, test_TC_MEMKIND_PmemDestroyKind)
+{
+    const size_t pmem_array_size = 10;
+    struct memkind * pmem_kind_array[pmem_array_size] = {nullptr};
+    int err = memkind_create_pmem(PMEM_DIR, MEMKIND_PMEM_MIN_SIZE, &pmem_kind_array[0]);
+    EXPECT_EQ(err, 0);
+    err = memkind_destroy_kind(pmem_kind_array[0]);
+    EXPECT_EQ(err, 0);
+    for (unsigned int i = 0; i < pmem_array_size; ++i ) {
+        err = memkind_create_pmem(PMEM_DIR, MEMKIND_PMEM_MIN_SIZE, &pmem_kind_array[i]);
+        EXPECT_EQ(err, 0);
+    }
+    char * pmem_middle_name = pmem_kind_array[5]->name;
+    err = memkind_destroy_kind(pmem_kind_array[5]);
+    EXPECT_EQ(err, 0);
+    err = memkind_destroy_kind(pmem_kind_array[6]);
+    EXPECT_EQ(err, 0);
+    err = memkind_create_pmem(PMEM_DIR, MEMKIND_PMEM_MIN_SIZE, &pmem_kind_array[5]);
+    EXPECT_EQ(err, 0);
+    char * pmem_new_middle_name = pmem_kind_array[5]->name;
+    EXPECT_STREQ(pmem_middle_name, pmem_new_middle_name);
 }

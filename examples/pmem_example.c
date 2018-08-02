@@ -32,7 +32,7 @@
 
 #include <memkind.h>
 #include <memkind/internal/memkind_pmem.h>
-
+#include <jemalloc/jemalloc.h>
 #include <sys/param.h>
 #include <sys/mman.h>
 #include <stdio.h>
@@ -43,120 +43,158 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define PMEM1_MAX_SIZE	(MEMKIND_PMEM_MIN_SIZE * 2)
-#define PMEM2_MAX_SIZE	((size_t)1024 * 1024 * 1024 * 1024)
-
-#define CHUNK_SIZE	(4 * 1024 * 1024) /* assume 4MB chunks */
-
-static int pmem_tmpfile(const char *dir, size_t size, int *fd, void **addr)
-{
-    static char template[] = "/pmem.XXXXXX";
-    int err = 0;
-    int oerrno;
-
-    char fullname[strlen(dir) + sizeof (template)];
-    (void) strcpy(fullname, dir);
-    (void) strcat(fullname, template);
-
-    if ((*fd = mkstemp(fullname)) < 0) {
-        perror("mkstemp()");
-        err = MEMKIND_ERROR_RUNTIME;
-        goto exit;
-    }
-
-    (void) unlink(fullname);
-
-    if (ftruncate(*fd, size) != 0) {
-        err = MEMKIND_ERROR_RUNTIME;
-        goto exit;
-    }
-
-    *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, *fd, 0);
-    if (*addr == MAP_FAILED) {
-        err = MEMKIND_ERROR_RUNTIME;
-        goto exit;
-    }
-
-    return err;
-
-exit:
-    oerrno = errno;
-    if (*fd != -1) {
-        (void) close(*fd);
-    }
-    *fd = -1;
-    *addr = NULL;
-    errno = oerrno;
-    return err;
-}
+static const size_t PMEM_PART_SIZE = MEMKIND_PMEM_MIN_SIZE + 4096;
+static const char*  PMEM_DIR = "/mnt/pmem/";
+//static struct memkind *pmem_kind;
 
 int
 main(int argc, char *argv[])
 {
-    struct memkind *pmem_kind1;
-    int err = 0;
-    int fd;
-    void *addr;
+    memkind_t pmem_kind;
 
-    /* create PMEM partition */
-    err = memkind_create_pmem(".", PMEM1_MAX_SIZE, &pmem_kind1);
-    if (err) {
+    for ( int i=0;i<250000;i++)
+    {
+//        // create PMEM partition
+        int err = memkind_create_pmem(PMEM_DIR, PMEM_PART_SIZE, &pmem_kind);
+        if (err) {
         perror("memkind_create_pmem()");
         fprintf(stderr, "Unable to create pmem partition\n");
-        return errno ? -errno : 1;
+        }
+        char* default_str = (char *)memkind_malloc(pmem_kind, 1025);
+        memkind_free(pmem_kind,default_str);
+        (void)default_str;
+        err = memkind_destroy_kind(pmem_kind); 
+        if (err) {
+            perror("memkind_destroy_kind()");
+            fprintf(stderr, "Unable to destroy pmem partition\n");
+        }
+        if(i %100==0)
+        {
+            fprintf(stderr, "\nvalue of i %d",i);
+        }/*
+    void *test = jemk_malloc (8000);
+    
+    void *test_2 = jemk_malloc (0x40000);
+    
+    jemk_free (test);
+    
+    jemk_free (test_2);*/
     }
 
-    /* alternate way to create PMEM partition */
-    err = pmem_tmpfile(".", PMEM2_MAX_SIZE, &fd, &addr);
-    if (err) {
-        fprintf(stderr, "Unable to create temporary file\n");
-        return errno ? -errno : 1;
-    }
 
-    const size_t size = 512;
-    char *pmem_str10 = NULL;
-    char *pmem_str11 = NULL;
-    char *pmem_str12 = NULL;
-    char *pmem_str = NULL;
+//    const size_t size = 1024;
+//    char *default_str = NULL;
+//    const size_t num = 1;
 
-    pmem_str10 = (char *)memkind_malloc(pmem_kind1, size);
-    if (pmem_str10 == NULL) {
-        perror("memkind_malloc()");
-        fprintf(stderr, "Unable to allocate pmem string (pmem_str10)\n");
-        return errno ? -errno : 1;
-    }
+//    SetUp(pmem_kind);
+    
+//    TearDown(pmem_kind);
+    
+//    SetUp(pmem_kind);
+    
+//    default_str = (char *)memkind_malloc(pmem_kind, size);
+//    if (default_str==NULL)
+//    {
+//        perror("malloc_failed()");
+//    }
+    
+//    sprintf(default_str, "memkind_malloc MEMKIND_PMEM\n");
+//    printf("%s", default_str);
+    
+//        memkind_free(pmem_kind, default_str);
 
-    /* next chunk mapping */
-    pmem_str11 = (char *)memkind_malloc(pmem_kind1, 8 * 1024 * 1024);
-    if (pmem_str11 == NULL) {
-        perror("memkind_malloc()");
-        fprintf(stderr, "Unable to allocate pmem string (pmem_str11)\n");
-        return errno ? -errno : 1;
-    }
+//   // Out of memory
+//    default_str = (char *)memkind_malloc(pmem_kind, 2 * PMEM_PART_SIZE);
+    
+//    if (default_str)
+//    {
+//        perror("malloc should failed()");
+//    }
+    
+//    TearDown(pmem_kind);
+    
+//    SetUp(pmem_kind);
+    
+//    default_str = (char *)memkind_calloc(pmem_kind, num, size);
+//    if (!default_str)
+//    {
+//        perror("calloc failed()");
+//    }
 
-    /* extend the heap #1 */
-    pmem_str12 = (char *)memkind_malloc(pmem_kind1, 16 * 1024 * 1024);
-    if (pmem_str12 == NULL) {
-        perror("memkind_malloc()");
-        fprintf(stderr, "Unable to allocate pmem string (pmem_str12)\n");
-        return errno ? -errno : 1;
-    }
+//    sprintf(default_str, "memkind_calloc MEMKIND_PMEM\n");
+//    printf("%s", default_str);
 
-    /* OOM #1 */
-    pmem_str = (char *)memkind_malloc(pmem_kind1, 16 * 1024 * 1024);
-    if (pmem_str != NULL) {
-        perror("memkind_malloc()");
-        fprintf(stderr, "Failure, this allocation should not be possible (expected result was NULL)\n");
-        return errno ? -errno : 1;
-    }
+//    memkind_free(pmem_kind, default_str);
 
-    sprintf(pmem_str10, "Hello world from persistent memory1\n");
+//    // allocate the buffer of the same size (likely at the same address)
+//    default_str = (char *)memkind_calloc(pmem_kind, num, size);
+//    if (!default_str)
+//    {
+//        perror("second calloc failed()");
+//    }
 
-    fprintf(stdout, "%s", pmem_str10);
+//    sprintf(default_str, "memkind_calloc MEMKIND_PMEM\n");
+//    printf("%s", default_str);
 
-    memkind_free(pmem_kind1, pmem_str10);
-    memkind_free(pmem_kind1, pmem_str11);
-    memkind_free(pmem_kind1, pmem_str12);
+//    memkind_free(pmem_kind, default_str);
+
+//    TearDown(pmem_kind);
+    
+//    SetUp(pmem_kind);
+    
+//    const size_t big_size = MEMKIND_PMEM_CHUNK_SIZE;
+
+//    default_str = (char *)memkind_calloc(pmem_kind, num, big_size);
+//    if (!default_str)
+//    {
+//        perror("big calloc failed()");
+//    }
+
+//    sprintf(default_str, "memkind_calloc MEMKIND_PMEM\n");
+//    printf("%s", default_str);
+
+//    memkind_free(pmem_kind, default_str);
+
+//    // allocate the buffer of the same size (likely at the same address)
+//    default_str = (char *)memkind_calloc(pmem_kind, num, big_size);
+//    default_str = (char *)memkind_calloc(pmem_kind, num, size);
+//    if (!default_str)
+//    {
+//        perror("second big calloc failed()");
+//    }
+//    sprintf(default_str, "memkind_calloc MEMKIND_PMEM\n");
+//    printf("%s", default_str);
+
+//    memkind_free(pmem_kind, default_str);
+
+//    TearDown(pmem_kind);
+    
+//    SetUp(pmem_kind);
+//    //realloc
+
+//     const size_t size1 = 512;
+//    const size_t size2 = 1024;
+    
+//    default_str = (char *)memkind_realloc(pmem_kind, default_str, size1);
+//    if (!default_str)
+//    {
+//        perror("realloc  failed()");
+//    }
+
+//    sprintf(default_str, "memkind_realloc MEMKIND_PMEM with size %zu\n", size1);
+//    printf("%s", default_str);
+
+//    default_str = (char *)memkind_realloc(pmem_kind, default_str, size2);
+
+//    if (!default_str)
+//    {
+//        perror("realloc  failed()");
+//    }
+    
+//    sprintf(default_str, "memkind_realloc MEMKIND_PMEM with size %zu\n", size2);
+//    printf("%s", default_str);
+
+//    memkind_free(pmem_kind, default_str);
 
     return 0;
 }

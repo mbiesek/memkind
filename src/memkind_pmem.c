@@ -27,6 +27,7 @@
 #include <memkind/internal/memkind_private.h>
 #include <memkind/internal/memkind_log.h>
 
+#include <stdio.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -45,7 +46,8 @@ MEMKIND_EXPORT struct memkind_ops MEMKIND_PMEM_OPS = {
     .mmap = memkind_pmem_mmap,
     .get_mmap_flags = memkind_pmem_get_mmap_flags,
     .get_arena = memkind_thread_get_arena,
-    .malloc_usable_size = memkind_default_malloc_usable_size
+    .malloc_usable_size = memkind_default_malloc_usable_size,
+    .finalize = memkind_pmem_destroy
 };
 
 void *pmem_extent_alloc(extent_hooks_t *extent_hooks,
@@ -95,6 +97,12 @@ bool pmem_extent_dalloc(extent_hooks_t *extent_hooks,
     bool committed,
     unsigned arena_ind)
 {
+//log_fatal("pmem_extent_dalloc");
+
+    log_fatal("\npmem_extent_dalloc addr %p size %lu commited %d",addr,size,committed);
+//    if (munmap(addr, size) == -1) {
+//        log_err("munmap failed!");
+//    }
     /* do nothing - report failure (opt-out) */
     return true;
 }
@@ -106,6 +114,8 @@ bool pmem_extent_commit(extent_hooks_t *extent_hooks,
     size_t length,
     unsigned arena_ind)
 {
+//log_fatal("pmem_extent_commit");
+
     /* do nothing - report success */
     return false;
 }
@@ -117,6 +127,8 @@ bool pmem_extent_decommit(extent_hooks_t *extent_hooks,
     size_t length,
     unsigned arena_ind)
 {
+//log_fatal("pmem_extent_decommit");
+
     /* do nothing - report failure (opt-out) */
     return true;
 }
@@ -128,9 +140,28 @@ bool pmem_extent_purge(extent_hooks_t *extent_hooks,
     size_t length,
     unsigned arena_ind)
 {
+//log_fatal("pmem_extent_purge");
+
     /* do nothing - report failure (opt-out) */
     return true;
 }
+
+bool pmem_extent_purge_forced(extent_hooks_t *extent_hooks,
+    void *addr,
+    size_t size,
+    size_t offset,
+    size_t length,
+    unsigned arena_ind)
+{
+//log_fatal("pmem_extent_purge_");
+
+//    if (munmap(addr, size) == -1) {
+//        log_err("munmap failed!");
+//    }
+    /* do nothing - report failure (opt-out) */
+    return true;
+}
+
 
 bool pmem_extent_split(extent_hooks_t *extent_hooks,
     void *addr,
@@ -140,6 +171,8 @@ bool pmem_extent_split(extent_hooks_t *extent_hooks,
     bool committed,
     unsigned arena_ind)
 {
+//log_fatal("pmem_extent_split");
+
     /* do nothing - report success */
     return false;
 }
@@ -152,6 +185,8 @@ bool pmem_extent_merge(extent_hooks_t *extent_hooks,
     bool committed,
     unsigned arena_ind)
 {
+//    log_fatal("pmem_extent_merge");
+
     /* do nothing - report success */
     return false;
 }
@@ -162,6 +197,7 @@ void pmem_extent_destroy(extent_hooks_t *extent_hooks,
     bool committed,
     unsigned arena_ind)
 {
+    log_fatal("\npmem_extent_destroy addr %p size %lu",addr,size);
     if (munmap(addr, size) == -1) {
         log_err("munmap failed!");
     }
@@ -173,6 +209,7 @@ static extent_hooks_t pmem_extent_hooks = {
     .commit = pmem_extent_commit,
     .decommit = pmem_extent_decommit,
     .purge_lazy = pmem_extent_purge,
+    .purge_forced = pmem_extent_purge_forced,
     .split = pmem_extent_split,
     .merge = pmem_extent_merge,
     .destroy = pmem_extent_destroy
@@ -184,6 +221,8 @@ MEMKIND_EXPORT int memkind_pmem_create(struct memkind *kind, struct memkind_ops 
     int err;
 
     priv = (struct memkind_pmem *)jemk_malloc(sizeof(struct memkind_pmem));
+//    fprintf(stderr,"\nmalloc in memkind_pmem_create pointer %p size %zu",priv,sizeof(struct memkind_pmem));
+
     if (!priv) {
         log_err("jemk_malloc() failed.");
         return MEMKIND_ERROR_MALLOC;
@@ -216,6 +255,8 @@ exit:
 
 MEMKIND_EXPORT int memkind_pmem_destroy(struct memkind *kind)
 {
+  //  log_fatal("\nmemkind_pmem_destroy");
+
     struct memkind_pmem *priv = kind->priv;
 
     memkind_arena_destroy(kind);
@@ -223,7 +264,11 @@ MEMKIND_EXPORT int memkind_pmem_destroy(struct memkind *kind)
     pthread_mutex_destroy(&priv->pmem_lock);
 
     (void) close(priv->fd);
+//    fprintf(stderr,"\nmemkind_pmem_destroy free pointer %p ",priv);
+
     jemk_free(priv);
+
+
 
     return 0;
 }
@@ -249,6 +294,8 @@ MEMKIND_EXPORT void *memkind_pmem_mmap(struct memkind *kind, void *addr, size_t 
     if ((result = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, priv->fd, priv->offset)) != MAP_FAILED) {
         priv->offset += size;
     }
+    log_fatal("\npmem_extent_alloc addr %p size %lu",result,priv->offset);
+
 
     pthread_mutex_unlock(&priv->pmem_lock);
 
