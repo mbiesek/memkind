@@ -27,7 +27,6 @@
 #include <memory>
 #include <string>
 #include <exception>
-#include <type_traits>
 #include <cstddef>
 #include <utility>
 #include <atomic>
