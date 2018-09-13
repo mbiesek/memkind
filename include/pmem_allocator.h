@@ -44,7 +44,9 @@
 namespace pmem
 {
     template<typename T>
-    struct allocator {
+    class allocator
+    {
+    public:
         typedef T value_type;
         typedef value_type* pointer;
         typedef const value_type* const_pointer;
