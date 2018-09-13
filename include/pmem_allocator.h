@@ -25,7 +25,6 @@
 #pragma once
 
 #include <memory> //runtime error
-#include <exception>
 #include <utility>
 #include <atomic>
 
