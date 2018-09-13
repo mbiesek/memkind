@@ -160,12 +160,13 @@ namespace pmem
         template <class U, class... Args>
         void construct(U* p, Args... args) const
         {
-            ::new(p) U(std::forward<Args>(args)...);
+            new(p) U(std::forward<Args>(args)...);
         }
 
-        void destroy(T* p) const
+        template <class U>
+        void destroy(U* p) const
         {
-            p->~value_type();
+            p->~U();
         }
 
         ~allocator()
