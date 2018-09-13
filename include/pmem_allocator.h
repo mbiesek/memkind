@@ -33,7 +33,14 @@
 #include <atomic>
 
 #include "memkind.h"
-
+/*
+ * Header file for the C++ allocator compatible with the C++ standard library allocator concepts.
+ * More details in hbwallocator(3) man page.
+ * Note: memory heap management is based on hbwmalloc, refer to the hbwmalloc man page for more information.
+ *
+ * Functionality defined in this header is considered as EXPERIMENTAL API.
+ * API standards are described in memkind(3) man page.
+ */
 namespace pmem
 {
     template<typename T>
