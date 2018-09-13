@@ -26,7 +26,7 @@
 
 #include <memory> //runtime error
 #include <atomic>
-
+#include <cstddef>
 #include "memkind.h"
 /*
  * Header file for the C++ allocator compatible with the C++ standard library allocator concepts.
