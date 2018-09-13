@@ -143,9 +143,9 @@ namespace pmem
             return !(*this ==other);
         }
 
-        T* allocate(size_type n) const
+        pointer allocate(size_type n) const
         {
-            T* result = static_cast<T*>(memkind_malloc(kind_ptr, n*sizeof(T)));
+            pointer result = static_cast<pointer>(memkind_malloc(kind_ptr, n*sizeof(T)));
             if (!result) {
                 throw std::bad_alloc();
             }
