@@ -95,11 +95,6 @@ namespace pmem
             assign(other);
         }
 
-        allocator(const allocator&& other) noexcept
-        {
-            assign(other);
-        }
-
         template <typename U>
         allocator(const allocator<U>&& other) noexcept
         {
