@@ -49,9 +49,10 @@ namespace pmem
         using reference = value_type&;
         using size_type = size_t;
         using difference_type = ptrdiff_t;
+        
         template<class U>
         struct rebind {
-            typedef allocator<U> other;
+            using other = allocator<U>;
         };
 
         template<typename U>
