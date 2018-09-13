@@ -56,29 +56,6 @@ namespace pmem
 
         template<typename U>
         friend class allocator;
-
-    private:
-        memkind_t kind_ptr;
-        std::atomic<size_t> * kind_cnt;
-
-        void clean_up()
-        {
-            if (kind_cnt->fetch_sub(1) == 1) {
-
-                memkind_destroy_kind(kind_ptr);
-                delete kind_cnt;
-            }
-        }
-
-        template <typename U>
-        inline void assign(U&& other)
-        {
-            kind_ptr = other.kind_ptr;
-            kind_cnt = other.kind_cnt;
-            ++(*kind_cnt);
-        }
-
-    public:
 #ifndef _GLIBCXX_USE_CXX11_ABI
         /* This is a workaround for compilers that uses C++11 standard,
          * but use old - non C++11 ABI */
@@ -195,5 +172,26 @@ namespace pmem
         {
             clean_up();
         }
+    private:
+        memkind_t kind_ptr;
+        std::atomic<size_t> * kind_cnt;
+
+        void clean_up()
+        {
+            if (kind_cnt->fetch_sub(1) == 1) {
+
+                memkind_destroy_kind(kind_ptr);
+                delete kind_cnt;
+            }
+        }
+
+        template <typename U>
+        inline void assign(U&& other)
+        {
+            kind_ptr = other.kind_ptr;
+            kind_cnt = other.kind_cnt;
+            ++(*kind_cnt);
+        }
+
     };
 }
