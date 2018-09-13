@@ -25,7 +25,6 @@
 #pragma once
 
 #include <memory> //runtime error
-#include <utility>
 #include <atomic>
 
 #include "memkind.h"
