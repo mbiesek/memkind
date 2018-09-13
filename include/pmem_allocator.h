@@ -55,7 +55,7 @@ namespace pmem
         };
 
         template<typename U>
-        friend struct allocator;
+        friend class allocator;
 
     private:
         memkind_t kind_ptr;
