@@ -166,7 +166,7 @@ namespace pmem
             return !(*this ==other);
         }
 
-        T* allocate(std::size_t n) const
+        T* allocate(size_type n) const
         {
             T* result = static_cast<T*>(memkind_malloc(kind_ptr, n*sizeof(T)));
             if (!result) {
@@ -175,7 +175,7 @@ namespace pmem
             return result;
         }
 
-        void deallocate(T* p, std::size_t n) const
+        void deallocate(T* p, size_type n) const
         {
             memkind_free(kind_ptr, static_cast<void*>(p));
         }
