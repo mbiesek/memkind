@@ -68,7 +68,7 @@ namespace pmem
         }
 
         template <typename U>
-        inline void assign(U&&  other)
+        inline void assign(U&& other)
         {
             kind_ptr = other.kind_ptr;
             kind_cnt = other.kind_cnt;
