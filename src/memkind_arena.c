@@ -391,6 +391,32 @@ MEMKIND_EXPORT int memkind_arena_destroy(struct memkind *kind)
     char cmd[128];
     unsigned int i;
 
+    unsigned *tcache_map = pthread_getspecific(tcache_key);
+    if (tcache_map )
+    {
+          while(tcache_map[kind->partition] != 0) {
+            int err = jemk_mallctl("tcache.destroy", NULL, NULL, (void*)&tcache_map[kind->partition],
+                             sizeof(unsigned));
+          if ( err )
+          {
+            printf("DUPA");
+          }
+            tcache_map[kind->partition]--;
+          }
+                     int err = jemk_mallctl("tcache.flush", NULL, NULL, (void*)&tcache_map[kind->partition],
+                             sizeof(unsigned));
+          if ( err )
+          {
+            printf("DUPA");
+          }
+          err = pthread_key_delete(tcache_key);
+                    if ( err )
+          {
+            printf("DUPA");
+          }
+          arena_config_once = PTHREAD_ONCE_INIT;
+    }
+
     if (kind->arena_map_len) {
         for (i = 0; i < kind->arena_map_len; ++i) {
             snprintf(cmd, 128, "arena.%u.destroy", kind->arena_zero + i);
@@ -420,7 +446,7 @@ static void tcache_finalize(void* args)
 {
     int i;
     unsigned *tcache_map = args;
-    for(i = 0; i<MEMKIND_NUM_BASE_KIND; i++) {
+    for(i = 0; i<MEMKIND_MAX_KIND; i++) {
         if(tcache_map[i] != 0) {
             jemk_mallctl("tcache.destroy", NULL, NULL, (void*)&tcache_map[i],
                          sizeof(unsigned));
@@ -432,13 +458,13 @@ static inline int get_tcache_flag(unsigned partition, size_t size)
 {
 
     // do not cache allocation larger than tcache_max nor those comming from non-static kinds
-    if(size > TCACHE_MAX || partition >= MEMKIND_NUM_BASE_KIND) {
+    if(size > TCACHE_MAX || partition >= MEMKIND_MAX_KIND) {
         return MALLOCX_TCACHE_NONE;
     }
 
     unsigned *tcache_map = pthread_getspecific(tcache_key);
     if(tcache_map == NULL) {
-        tcache_map = jemk_calloc(MEMKIND_NUM_BASE_KIND, sizeof(unsigned));
+        tcache_map = jemk_calloc(MEMKIND_MAX_KIND, sizeof(unsigned));
         if(tcache_map == NULL) {
             return MALLOCX_TCACHE_NONE;
         }

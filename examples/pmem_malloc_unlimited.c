@@ -70,26 +70,41 @@ int main(int argc, char *argv[])
     }
 
     char *pmem_str10 = NULL;
-    char *pmem_str11 = NULL;
-
-    /* Huge allocation */
-    pmem_str10 = (char *)memkind_malloc(pmem_kind_unlimited, 32 * 1024 * 1024);
+    
+        /* Huge allocation */
+    pmem_str10 = (char *)memkind_malloc(pmem_kind_unlimited, 512);
     if (pmem_str10 == NULL) {
         perror("memkind_malloc()");
         fprintf(stderr, "Unable to allocate pmem string (pmem_str10)\n");
         return errno ? -errno : 1;
     }
+    
+//    memkind_free(pmem_kind_unlimited, pmem_str10);
+
+    err = memkind_destroy_kind(pmem_kind_unlimited);
+    if (err) {
+        perror("memkind_destroy_kind()");
+        fprintf(stderr, "Unable to destroy pmem partition\n");
+        return errno ? -errno : 1;
+    }
+    
+    /* Create PMEM partition with unlimited size */
+    err = memkind_create_pmem(PMEM_DIR, 0, &pmem_kind_unlimited);
+    if (err) {
+        perror("memkind_create_pmem()");
+        fprintf(stderr, "Unable to create pmem partition\n");
+        return errno ? -errno : 1;
+    }
 
     /* Another huge allocation, kind size is only limited by OS resources */
-    pmem_str11 = (char *)memkind_malloc(pmem_kind_unlimited, 32 * 1024 * 1024);
-    if (pmem_str11 == NULL) {
+    pmem_str10 = (char *)memkind_malloc(pmem_kind_unlimited, 512);
+    if (pmem_str10 == NULL) {
         perror("memkind_malloc()");
         fprintf(stderr, "Unable to allocate pmem string (pmem_str11)\n");
         return errno ? -errno : 1;
     }
 
     memkind_free(pmem_kind_unlimited, pmem_str10);
-    memkind_free(pmem_kind_unlimited, pmem_str11);
 
     err = memkind_destroy_kind(pmem_kind_unlimited);
     if (err) {
