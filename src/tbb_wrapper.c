@@ -26,7 +26,7 @@ void *(*pool_identify)(void *object);
 size_t (*pool_msize)(void *, void *);
 
 static void *tbb_handle = NULL;
-static bool TBBInitDone = false;
+static bool TBBInitDone = true;
 
 void load_tbb_symbols(void)
 {
